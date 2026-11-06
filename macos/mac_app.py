@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QRectF, QLockFile
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QPainter, QPainterPath, QPen, QIcon
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QComboBox, QCheckBox, QSlider, QSpinBox, QTabWidget, QFormLayout,
+    QPushButton, QComboBox, QCheckBox, QSlider, QSpinBox, QDoubleSpinBox, QTabWidget, QFormLayout,
     QLineEdit, QMessageBox, QScrollArea)
 from presentation import METRICS, KEY_LABELS, format_value
 from reader import Reader, PickupReader
@@ -185,8 +185,13 @@ class Window(QWidget):
         apply=QPushButton('단축키 적용');apply.clicked.connect(self.apply_keys);form.addRow(apply)
         self.key_status=QLabel('Ctrl = Control · Alt = Option · Cmd = Command');self.key_status.setWordWrap(True);form.addRow(self.key_status);tabs.addTab(page,'단축키')
         page=QWidget();form=QFormLayout(page);self.edges=[]
-        for label in ('왼쪽','위쪽','오른쪽','아래쪽'):
-            spin=QSpinBox();spin.setRange(0,30);spin.setSuffix(' %');spin.valueChanged.connect(self.target_changed);self.edges.append(spin);form.addRow(label+' 제외 여백',spin)
+        saved_edges=self.conf.get('crop_edges',[0,0,0,0])
+        if not isinstance(saved_edges,list) or len(saved_edges)!=4:saved_edges=[0,0,0,0]
+        for index,label in enumerate(('왼쪽','위쪽','오른쪽','아래쪽')):
+            spin=QDoubleSpinBox();spin.setRange(0,30);spin.setDecimals(2);spin.setSingleStep(.1);spin.setSuffix(' %')
+            try:spin.setValue(float(saved_edges[index]))
+            except (ValueError,TypeError):pass
+            spin.valueChanged.connect(self.target_changed);self.edges.append(spin);form.addRow(label+' 제외 여백',spin)
         helptext=QLabel('창 제목 표시줄이나 검은 여백 때문에 인식이 안 될 때만 조절하세요.\n값을 바꾸면 현재 측정이 일시정지됩니다. 게임 영역만 남겨 주세요.\n처음에는 창 모드로 테스트하는 것을 권장합니다.');helptext.setWordWrap(True);form.addRow(helptext)
         tabs.addTab(page,'인식 영역')
         row=QHBoxLayout();self.start=QPushButton('측정 시작');self.start.clicked.connect(lambda:self.action('toggle'))
@@ -240,6 +245,7 @@ class Window(QWidget):
     def target_changed(self,*_):
         self.model.session.pause(time.monotonic());self.model.invalidate();self.last_undo=None
         if hasattr(self,'status'):self.status.setText('선택한 영역의 경험치를 확인하는 중…')
+        if hasattr(self,'overlay'):self.save()
 
     def capture_job(self,ident,edges,generation):
         try:
@@ -334,7 +340,8 @@ class Window(QWidget):
         if not hasattr(self,'overlay'):return
         conf=dict(metrics=[k for k,cb in self.metrics.items() if cb.isChecked()],percent=self.percent.isChecked(),
                   font_size=self.font_size.value(),background_opacity=self.bg_alpha.value(),text_opacity=self.text_alpha.value(),
-                  position=[self.overlay.x(),self.overlay.y()],hotkeys={k:e.text().strip() for k,e in self.key_inputs.items()})
+                  position=[self.overlay.x(),self.overlay.y()],hotkeys={k:e.text().strip() for k,e in self.key_inputs.items()},
+                  crop_edges=[s.value() for s in self.edges])
         try:
             temp=self.data/'settings.tmp';temp.write_text(json.dumps(conf,ensure_ascii=False),encoding='utf-8');temp.replace(self.data/'settings.json')
         except OSError:self.status.setText('설정을 저장하지 못했습니다. 저장 공간을 확인하세요.')

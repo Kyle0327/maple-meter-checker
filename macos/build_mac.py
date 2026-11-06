@@ -12,7 +12,7 @@ from PIL import Image
 if sys.platform!='darwin':raise SystemExit('Build this app on macOS.')
 root=Path(__file__).resolve().parent
 Image.open(root/'checker.png').save(root/'checker.icns',format='ICNS')
-assets=['glyphs.json','checker.png','Pretendard-Bold.otf','Pretendard-ExtraBold.otf','Pretendard-LICENSE.txt']
+assets=['glyphs.json','checker.png','Pretendard-Bold.otf','Pretendard-ExtraBold.otf','Pretendard-LICENSE.txt','Python-LICENSE.txt']
 args=[sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--noupx',
       '--name','MapleMeterChecker','--osx-bundle-identifier','com.kyle0327.maplemeterchecker',
       '--icon',str(root/'checker.icns'),'--distpath',str(root/'dist'),'--workpath',str(root/'build'),
