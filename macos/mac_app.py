@@ -11,12 +11,12 @@ from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QPainter, 
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QSlider, QSpinBox, QDoubleSpinBox, QTabWidget, QFormLayout,
     QLineEdit, QMessageBox, QScrollArea)
-from presentation import METRICS, KEY_LABELS, format_value
+from presentation import METRICS, KEY_LABELS, format_value, selected_metrics
 from reader import Reader, PickupReader
 from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
 
-VERSION='2.2.0-mac-preview.1'
+VERSION='2.2.0-mac-preview.2'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 
@@ -66,6 +66,7 @@ class Overlay(QWidget):
         size=self.owner.font_size.value();font=self.font_for(size)
         fm=QFontMetrics(font);rh=max(27,fm.height()+14)
         stats=self.owner.model.session.stats(time.monotonic(),self.owner.percent.isChecked())
+        if time.monotonic()-self.owner.model.last_good>3:stats['level_eta']=None
         keys=self.selected();width=350
         for key in keys:
             value=format_value(key,stats.get(key),self.owner.percent.isChecked())
@@ -109,7 +110,7 @@ class Overlay(QWidget):
         for i,key in enumerate(keys):
             cy=70+i*rh+rh/2;fm=QFontMetrics(font)
             baseline=cy+(fm.ascent()-fm.descent())/2
-            if key!='elapsed':
+            if key.startswith(('exp_','meso_')):
                 p.setPen(Qt.PenStyle.NoPen);p.setBrush(QColor('#FFB45C' if key.startswith('meso') else '#74DCFF'))
                 p.drawRect(QRectF(9,cy-3,3,6))
             self.outlined(p,METRICS[key],20,baseline,font)
@@ -165,11 +166,11 @@ class Window(QWidget):
         self.status=QLabel('화면 기록 권한을 허용하고 게임 창을 선택하세요.');self.status.setWordWrap(True);outer.addWidget(self.status)
         tabs=QTabWidget();outer.addWidget(tabs)
         page=QWidget();layout=QVBoxLayout(page);self.metrics={}
-        selected=self.conf.get('metrics',list(METRICS))
+        selected=selected_metrics(self.conf)
         for key,label in METRICS.items():
             cb=QCheckBox(label);cb.setChecked(key in selected);cb.toggled.connect(self.changed);self.metrics[key]=cb;layout.addWidget(cb)
         self.percent=QCheckBox('경험치를 %로 표시');self.percent.setChecked(bool(self.conf.get('percent',False)));self.percent.toggled.connect(self.changed);layout.addWidget(self.percent)
-        layout.addWidget(QLabel('분당·30분·1시간은 현재 평균 속도로 계산한 예상치입니다.'));layout.addStretch();tabs.addTab(page,'표시 항목')
+        layout.addWidget(QLabel('분당·30분·1시간과 레벨업 시간은 평균 속도 기준 예상치입니다.\n메소 +α는 누락 가능성을 뜻하며 누락량을 임의로 더하지 않습니다.'));layout.addStretch();tabs.addTab(page,'표시 항목')
         page=QWidget();form=QFormLayout(page)
         self.font_size=QSpinBox();self.font_size.setRange(8,26);self.font_size.setValue(self.number('font_size',16,8,26));self.font_size.valueChanged.connect(self.changed);form.addRow('글자 크기',self.font_size)
         self.bg_alpha=self.slider(self.number('background_opacity',80,0,100),0);form.addRow('배경 불투명도',self.bg_alpha)
@@ -338,7 +339,7 @@ class Window(QWidget):
 
     def save(self):
         if not hasattr(self,'overlay'):return
-        conf=dict(metrics=[k for k,cb in self.metrics.items() if cb.isChecked()],percent=self.percent.isChecked(),
+        conf=dict(metrics_revision=2,metrics=[k for k,cb in self.metrics.items() if cb.isChecked()],percent=self.percent.isChecked(),
                   font_size=self.font_size.value(),background_opacity=self.bg_alpha.value(),text_opacity=self.text_alpha.value(),
                   position=[self.overlay.x(),self.overlay.y()],hotkeys={k:e.text().strip() for k,e in self.key_inputs.items()},
                   crop_edges=[s.value() for s in self.edges])
@@ -368,7 +369,7 @@ def main():
             try:
                 window.bg_alpha.setValue(0);window.font_size.setValue(8);window.overlay.refresh()
                 assert window.overlay.width()>=350
-                assert len(window.metrics)==9
+                assert len(window.metrics)==10
                 assert window.overlay.grab().width()>0
                 print('MAC_APP_SMOKE_OK',flush=True)
                 window.close()

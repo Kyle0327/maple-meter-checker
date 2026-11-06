@@ -8,3 +8,7 @@ macos/release/
 macos/third-party-licenses/
 macos/*.spec
 macos/checker.icns
+
+windows/build/
+windows/dist/
+windows/*.spec

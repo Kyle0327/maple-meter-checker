@@ -37,7 +37,7 @@ import plistlib
 bundle=root/'dist/MapleMeterChecker.app'
 plist=bundle/'Contents/Info.plist'
 info=plistlib.loads(plist.read_bytes())
-info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22001',
+info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22002',
             LSMinimumSystemVersion='14.0',NSHighResolutionCapable=True,
             NSScreenCaptureUsageDescription='선택한 메이플스토리 게임 창의 경험치와 메소를 읽습니다. 화면이나 오디오는 저장하거나 전송하지 않습니다.')
 plist.write_bytes(plistlib.dumps(info))

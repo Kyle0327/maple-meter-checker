@@ -74,6 +74,19 @@ class Session:
             self.history.popleft()
         return True
 
+    def level_eta(self,now):
+        """Seconds to next level at the measured net EXP/sec, not percent/sec."""
+        elapsed=self.elapsed(now)
+        reading=self.current
+        if not self.started or self.warning or elapsed<1 or self.gained<=0 or reading is None:
+            return None
+        if reading.level is None or not 1<=reading.level<200:
+            return None
+        needed=exp_for_level(reading.level)
+        if not 0<=reading.exp<needed or abs(reading.exp*100/needed-reading.percent)>.016:
+            return None
+        return (needed-reading.exp)*elapsed/self.gained
+
     def stats(self,now,percent=False):
         elapsed=self.elapsed(now)
         total=self.percent_gained if percent else self.gained
@@ -89,7 +102,7 @@ class Session:
                 baseline=vb
         recent=self.gained-baseline
         meso_min=self.meso*60/elapsed if elapsed>=1 and self.meso_seen else None
-        return {'elapsed':elapsed,'exp_total':total,'exp_min':rate,
+        return {'elapsed':elapsed,'level_eta':self.level_eta(now),'exp_total':total,'exp_min':rate,
                 'exp_30min':None if rate is None else rate*30,
                 'exp_hour':None if rate is None else rate*60,
                 'exp_recent':recent if elapsed>=60 else None,

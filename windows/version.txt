@@ -1,0 +1,9 @@
+VSVersionInfo(
+  ffi=FixedFileInfo(filevers=(2,1,2,0),prodvers=(2,1,2,0),mask=0x3f,flags=0x0,OS=0x40004,fileType=0x1,subtype=0x0,date=(0,0)),
+  kids=[StringFileInfo([StringTable('040904B0',[
+    StringStruct('FileDescription','Maple meter checker'),
+    StringStruct('FileVersion','2.1.2'),
+    StringStruct('InternalName','MapleMeterChecker'),
+    StringStruct('OriginalFilename','MapleMeterChecker.exe'),
+    StringStruct('ProductName','Maple meter checker'),
+    StringStruct('ProductVersion','2.1.2')])]),VarFileInfo([VarStruct('Translation',[1033,1200])])])

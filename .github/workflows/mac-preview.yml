@@ -2,7 +2,7 @@ name: Build macOS preview
 on:
   workflow_dispatch:
   push:
-    branches: [mac-preview]
+    branches: [main, mac-preview]
     paths: ['macos/**', '.github/workflows/mac-preview.yml']
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
       - name: Install pinned dependencies
         run: python -m pip install -r macos/requirements-mac.txt
       - name: Test counters and capture boundaries
-        run: python -m unittest discover -s macos -p test_mac.py -v
+        run: python -m unittest discover -s macos -p "test_*.py" -v
       - name: Check native capture APIs
         run: |
           python - <<'PY'
@@ -73,9 +73,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=mac-v2.2.0-preview.1
+          tag=mac-v2.2.0-preview.2
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release-files/* macos/README-mac.txt --clobber
           else
-            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.1" --notes-file macos/RELEASE-NOTES.txt
+            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.2" --notes-file macos/RELEASE-NOTES.txt
           fi

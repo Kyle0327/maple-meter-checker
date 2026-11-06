@@ -2,8 +2,9 @@
 METRICS={
     'exp_total':'누적 경험치', 'exp_min':'분당 경험치',
     'exp_30min':'30분 경험치', 'exp_hour':'1시간 경험치',
-    'meso_total':'누적 메소', 'meso_min':'분당 메소',
-    'meso_30min':'30분 메소', 'meso_hour':'1시간 메소', 'elapsed':'측정 시간',
+    'meso_total':'누적 메소 +α', 'meso_min':'분당 메소 +α',
+    'meso_30min':'30분 메소 +α', 'meso_hour':'1시간 메소 +α',
+    'level_eta':'레벨업까지 (예상)', 'elapsed':'측정 시간',
 }
 DEFAULT_KEYS={
     'toggle':'Ctrl+Alt+F8', 'settings':'Ctrl+Alt+F9', 'lock':'Ctrl+Alt+F10',
@@ -14,10 +15,19 @@ KEY_LABELS={'toggle':'시작 / 일시정지','settings':'설정 열기','lock':'
 
 def format_value(key,value,percent=False):
     if value is None:return '—'
-    if key=='elapsed':
-        s=int(value);return f'{s//3600:02}:{s//60%60:02}:{s%60:02}'
+    if key in ('elapsed','level_eta'):
+        import math
+        if not math.isfinite(value) or value<0:return '—'
+        s=math.ceil(value) if key=='level_eta' else int(value)
+        return f'{s//3600:02}:{s//60%60:02}:{s%60:02}'
     if percent and key.startswith('exp_'):return f'{value:,.4f}%'
     return f'{value:,.0f}'
+
+def selected_metrics(conf):
+    selected=set(conf.get('metrics',METRICS)) & METRICS.keys()
+    # Enable the newly added metric once; later explicit deselection persists.
+    if conf.get('metrics_revision')!=2:selected.add('level_eta')
+    return selected
 
 def row_layout(count,label_height,value_height,header=72):
     # Both labels and values share a center; separators clear their actual
