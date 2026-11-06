@@ -6,6 +6,9 @@ on:
     paths: ['macos/**', '.github/workflows/mac-preview.yml']
 permissions:
   contents: read
+concurrency:
+  group: mac-preview
+  cancel-in-progress: true
 jobs:
   build:
     strategy:
