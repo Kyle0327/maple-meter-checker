@@ -1,0 +1,7 @@
+numpy==2.5.4
+Pillow==13.0.0
+PySide6-Essentials==6.12.0
+pyobjc-framework-ScreenCaptureKit==13.0
+pyobjc-framework-Quartz==13.0
+pyobjc-framework-Cocoa==13.0
+PyInstaller==6.22.3
