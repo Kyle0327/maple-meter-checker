@@ -6,15 +6,15 @@
 
 **무료 다운로드 · GitHub 로그인 불필요 · Python 설치 불필요**
 
-현재 배포: **2.1.1 / Windows x64** · [업데이트 내용과 검사 결과](https://github.com/Kyle0327/maple-meter-checker/releases/latest)
+현재 배포: **2.1.2 / Windows x64** · [업데이트 내용과 검사 결과](https://github.com/Kyle0327/maple-meter-checker/releases/latest)
 
 ### Mac 테스트 버전
 
 **macOS 14 이상** · CrossOver에서 게임이 정상 실행되는 환경을 대상으로 합니다.
 
-- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.1/MapleMeterChecker-macOS-arm64-preview.zip)
-- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.1/MapleMeterChecker-macOS-x86_64-preview.zip)
-- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.1)
+- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.2/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.2/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.2)
 
 앱을 응용 프로그램 폴더로 옮긴 뒤 화면 기록 권한을 허용하고, 창 목록에서 게임 창을 선택하세요. Mac 기본 시작/일시정지 단축키는 **Control + Option + S**입니다.
 
@@ -37,10 +37,11 @@
 | 구분 | 표시 항목 |
 |---|---|
 | 경험치 | 누적 / 분당 / 30분 / 1시간, 수치 또는 % |
-| 메소 | 누적 / 분당 / 30분 / 1시간 |
+| 메소 +α | 누적 / 분당 / 30분 / 1시간, 누락 가능성 표시 |
+| 레벨업 | 다음 레벨까지 남은 예상 시간 |
 | 시간 | 측정 시간 |
 
-분당·30분·1시간 값은 측정 중 평균 속도로 계산한 예상치입니다. 글자와 배경의 투명도를 따로 조절하며, 패널을 게임 밖과 다른 모니터로 옮길 수 있습니다.
+분당·30분·1시간 값은 측정 중 평균 속도로 계산한 예상치입니다. **메소 +α**는 빠르게 사라진 메시지 등으로 놓친 획득량이 있을 수 있다는 뜻이며, 누락량을 임의로 더하지 않습니다. **레벨업까지 (예상)**는 현재 레벨의 남은 경험치 ÷ 평균 순 경험치 속도로 계산합니다. 속도가 없거나 인식이 안 되면 `—`로 표시합니다. 표시 항목에서 켜고 끌 수 있습니다. 글자와 배경의 투명도를 따로 조절하며, 패널을 게임 밖과 다른 모니터로 옮길 수 있습니다.
 
 ### 기본 단축키
 
@@ -58,7 +59,7 @@
 
 2.1.1은 실행 시 임시 폴더에 실행 환경을 풀던 단일 EXE 방식을 EXE와 필수 파일을 함께 제공하는 방식으로 변경했습니다. UPX 압축은 사용하지 않습니다.
 
-2026-11-05, 제작 PC의 **Microsoft Defender**로 2.1.1 배포 폴더와 최종 ZIP을 각각 검사했으며 **위협이 발견되지 않았다는 결과**를 받았습니다. 기능 테스트 31개와 앱 시작·화면 표시도 확인했습니다. 검사 정보 및 파일 해시는 [릴리스](https://github.com/Kyle0327/maple-meter-checker/releases/latest)에 첨부되어 있습니다.
+2026-11-05, 제작 PC의 **Microsoft Defender**로 2.1.2 배포 폴더와 최종 ZIP을 각각 검사했으며 **위협이 발견되지 않았다는 결과**를 받았습니다. Windows 기능 테스트 43개와 새 항목의 미리보기 배치를 확인했습니다. 검사 정보 및 파일 해시는 [릴리스](https://github.com/Kyle0327/maple-meter-checker/releases/latest)에 첨부되어 있습니다.
 
 앱은 **전자서명되지 않았습니다.** 이번 검사만으로 모든 PC·백신에서 안전하거나 차단되지 않는다고 보장하지 않습니다. 기존 2.1이 다른 PC에서 삭제되었다는 제보는 있으나 정확한 탐지명은 아직 확인되지 않았습니다. **오탐 문제가 완전히 해소되었다고 확정하지 않습니다.**
 
