@@ -8,6 +8,21 @@
 
 현재 배포: **2.1.1 / Windows x64** · [업데이트 내용과 검사 결과](https://github.com/Kyle0327/maple-meter-checker/releases/latest)
 
+### Mac 테스트 버전
+
+**macOS 14 이상** · CrossOver에서 게임이 정상 실행되는 환경을 대상으로 합니다.
+
+- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.1/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.1/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.1)
+
+앱을 응용 프로그램 폴더로 옮긴 뒤 화면 기록 권한을 허용하고, 창 목록에서 게임 창을 선택하세요. Mac 기본 시작/일시정지 단축키는 **Control + Option + S**입니다.
+
+**실제 CrossOver 게임 인식은 사용자 테스트 전입니다.** Apple Silicon·Intel에서 빌드 및 앱 시작 테스트를 거칩니다. Apple Developer ID 서명·공증은 아직 없어 Gatekeeper가 차단할 수 있는 테스트 빌드입니다. 일반 사용자용 서명·공증과 실기기 검증은 남아 있습니다.
+
+아래 안내와 단축키 표는 Windows 기준이며, Mac은 위의 별도 사용 안내를 확인해 주세요.
+
+
 ### 시작하기
 
 1. 위 **Windows용 다운로드**를 누릅니다.
