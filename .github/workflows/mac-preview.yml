@@ -47,6 +47,7 @@ jobs:
       - name: Launch packaged app smoke test
         env:
           MMC_TEST_DATA: ${{ runner.temp }}/mmc-smoke
+          MMC_SMOKE_IMAGE: ${{ runner.temp }}/mmc-capture-preview.png
         run: |
           python - <<'PY'
           import subprocess
@@ -56,6 +57,11 @@ jobs:
           assert result.returncode == 0, result.returncode
           assert 'MAC_APP_SMOKE_OK' in result.stdout
           PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-ui-check-${{ runner.arch }}
+          path: ${{ runner.temp }}/mmc-capture-preview.png
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: mac-preview-${{ runner.arch }}
@@ -70,15 +76,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          pattern: mac-preview-*
           path: release-files
           merge-multiple: true
       - name: Publish mac-only preview without replacing Windows latest
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=mac-v2.2.0-preview.4
+          tag=mac-v2.2.0-preview.5
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release-files/* macos/README-mac.txt --clobber
           else
-            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.4" --notes-file macos/RELEASE-NOTES.txt
+            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.5" --notes-file macos/RELEASE-NOTES.txt
           fi

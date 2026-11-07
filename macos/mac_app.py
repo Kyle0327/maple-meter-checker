@@ -7,16 +7,17 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QRectF, QLockFile
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QPainter, QPainterPath, QPen, QIcon
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QPainter, QPainterPath, QPen, QIcon, QImage, QPixmap
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QSlider, QSpinBox, QDoubleSpinBox, QTabWidget, QFormLayout,
-    QLineEdit, QMessageBox, QScrollArea)
+    QLineEdit, QMessageBox, QScrollArea, QFileDialog)
 from presentation import METRICS, KEY_LABELS, format_value, selected_metrics
-from reader import Reader, PickupReader
+from reader import PickupReader
+from mac_recognition import MacHudReader, hud_preview
 from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
 
-VERSION='2.2.0-mac-preview.4'
+VERSION='2.2.0-mac-preview.5'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 
@@ -137,7 +138,8 @@ class Window(QWidget):
         super().__init__();self.smoke=smoke;self.model=Model();self.pool=ThreadPoolExecutor(max_workers=1)
         self.bus=Bus();self.bus.result.connect(self.receive);self.bus.windows.connect(self.received_windows)
         self.bus.failed.connect(self.failed);self.bus.hotkey.connect(self.action)
-        self.busy=False;self.closing=False;self.capture=None;self.reader=Reader();self.pickup=PickupReader();self.reader_key=None
+        self.busy=False;self.closing=False;self.capture=None;self.reader=MacHudReader();self.pickup=PickupReader();self.reader_key=None
+        self.last_preview=None
         self.frame_size=None;self.conf={};self.hotkeys=None;self.last_undo=None
         self.data=Path(os.environ.get('MMC_TEST_DATA',str(Path.home()/'Library/Application Support/MapleMeterChecker')))
         self.data.mkdir(parents=True,exist_ok=True)
@@ -164,7 +166,7 @@ class Window(QWidget):
         row.addWidget(self.permission_button);row.addWidget(self.refresh_button);outer.addLayout(row)
         self.windows=QComboBox();self.windows.addItem('게임 창을 선택하세요',None);self.windows.currentIndexChanged.connect(self.target_changed);outer.addWidget(self.windows)
         self.status=QLabel('화면 기록 권한을 허용하고 게임 창을 선택하세요.');self.status.setWordWrap(True);outer.addWidget(self.status)
-        tabs=QTabWidget();outer.addWidget(tabs)
+        tabs=QTabWidget();self.tabs=tabs;outer.addWidget(tabs)
         page=QWidget();layout=QVBoxLayout(page);self.metrics={}
         selected=selected_metrics(self.conf)
         for key,label in METRICS.items():
@@ -193,12 +195,18 @@ class Window(QWidget):
             try:spin.setValue(float(saved_edges[index]))
             except (ValueError,TypeError):pass
             spin.valueChanged.connect(self.target_changed);self.edges.append(spin);form.addRow(label+' 제외 여백',spin)
-        helptext=QLabel('창 제목 표시줄이나 검은 여백 때문에 인식이 안 될 때만 조절하세요.\n값을 바꾸면 현재 측정이 일시정지됩니다. 게임 영역만 남겨 주세요.\n처음에는 창 모드로 테스트하는 것을 권장합니다.');helptext.setWordWrap(True);form.addRow(helptext)
-        tabs.addTab(page,'인식 영역')
+        helptext=QLabel('우선 여백 0%로 시도하세요. 아래 미리보기에 게임 하단 경험치 숫자가 보여야 합니다.\n검은 여백이 있을 때만 조절하세요. 변경하면 측정이 일시정지됩니다.');helptext.setWordWrap(True);form.addRow(helptext)
+        clear_edges=QPushButton('여백 0%로 되돌리기');clear_edges.clicked.connect(self.clear_edges);form.addRow(clear_edges)
+        self.capture_preview=QLabel('게임 창을 선택하면 실제로 읽는 하단 화면이 여기에 표시됩니다.')
+        self.capture_preview.setMinimumSize(400,110);self.capture_preview.setMaximumHeight(160)
+        self.capture_preview.setAlignment(Qt.AlignmentFlag.AlignCenter);self.capture_preview.setWordWrap(True);form.addRow(self.capture_preview)
+        self.preview_info=QLabel('미리보기는 이 기기 안에서만 표시됩니다.');self.preview_info.setWordWrap(True);form.addRow(self.preview_info)
+        self.save_preview=QPushButton('진단용 하단 화면을 PNG로 저장');self.save_preview.setEnabled(False);self.save_preview.clicked.connect(self.export_preview);form.addRow(self.save_preview)
+        crop_scroll=QScrollArea();crop_scroll.setWidgetResizable(True);crop_scroll.setWidget(page);tabs.addTab(crop_scroll,'인식 영역')
         row=QHBoxLayout();self.start=QPushButton('측정 시작');self.start.clicked.connect(lambda:self.action('toggle'))
         reset=QPushButton('초기화');reset.clicked.connect(lambda:self.action('reset'));self.undo=QPushButton('초기화 취소');self.undo.clicked.connect(self.undo_reset);self.undo.setEnabled(False)
         row.addWidget(reset);row.addWidget(self.undo);row.addStretch();row.addWidget(self.start);outer.addLayout(row)
-        note=QLabel('화면은 PC 안에서 처리합니다. 캡처 이미지·오디오는 저장하거나 전송하지 않습니다.');note.setWordWrap(True);outer.addWidget(note)
+        note=QLabel('화면은 이 기기 안에서만 처리합니다. 진단 PNG는 저장 버튼을 누른 경우에만 저장하며 자동 전송하지 않습니다.');note.setWordWrap(True);outer.addWidget(note)
         self.overlay=Overlay(self)
         pos=self.conf.get('position')
         if isinstance(pos,list) and len(pos)==2:
@@ -245,6 +253,9 @@ class Window(QWidget):
 
     def target_changed(self,*_):
         self.model.session.pause(time.monotonic());self.model.invalidate();self.last_undo=None
+        self.last_preview=None
+        if hasattr(self,'capture_preview'):
+            self.capture_preview.clear();self.capture_preview.setText('새 영역을 확인하는 중…');self.save_preview.setEnabled(False)
         if hasattr(self,'status'):self.status.setText('선택한 영역의 경험치를 확인하는 중…')
         if hasattr(self,'overlay'):self.save()
 
@@ -252,23 +263,45 @@ class Window(QWidget):
         try:
             image,at=self.capture.image(ident);image=crop_frame(image,edges)
             key=(ident,edges)
-            if self.reader_key!=key:self.reader=Reader();self.pickup=PickupReader();self.reader_key=key
-            value,_=self.reader.read_image(image)
-            hint=image.height/self.reader.scale[1] if self.reader.scale else None
-            lines=self.pickup.read(image,hint)
-            self.bus.result.emit(dict(generation=generation,at=at,value=value,lines=lines,resized=self.pickup.changed,size=image.size))
+            if self.reader_key!=key:self.reader=MacHudReader();self.pickup=PickupReader();self.reader_key=key
+            value=self.reader.read_image(image)
+            lines=self.pickup.read(image,self.reader.factor)
+            self.bus.result.emit(dict(generation=generation,at=at,value=value,lines=lines,resized=self.pickup.changed,
+                size=image.size,preview=hud_preview(image),factor=self.reader.factor,backend=self.capture.backend))
         except Exception as error:self.bus.failed.emit((generation,str(error)))
 
     def receive(self,packet):
         self.busy=False
         if not self.model.feed(packet):return
         self.frame_size=packet['size']
+        preview=packet.get('preview')
+        if preview is not None:
+            self.last_preview=preview
+            qimage=QImage(preview.tobytes(),preview.width,preview.height,preview.width*3,QImage.Format.Format_RGB888).copy()
+            self.capture_preview.setPixmap(QPixmap.fromImage(qimage).scaled(650,150,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation))
+            factor=packet.get('factor');scale=f'{factor:.3g}배' if factor else '확인 중'
+            self.preview_info.setText(f"캡처 {self.frame_size[0]}×{self.frame_size[1]} · 글자 배율 {scale} · {packet.get('backend','')} · {VERSION}")
+            self.save_preview.setEnabled(True)
         if packet['value']:
             n,pct=packet['value'];text=f'EXP {n:,} · {pct:.2f}% · 화면 {self.frame_size[0]}×{self.frame_size[1]}'
             if self.model.pickups.uncertain:text+=' · 메소 메시지 누락 가능'
             if self.model.session.warning:text+=' · '+self.model.session.warning
             self.status.setText(text)
-        else:self.status.setText('경험치 인식 대기 · 게임 창 선택과 인식 영역을 확인하세요.')
+        else:self.status.setText(f'화면 {self.frame_size[0]}×{self.frame_size[1]} 수신 · 경험치 숫자 확인 중. 인식 영역 탭의 하단 화면을 확인하세요.')
+
+    def clear_edges(self):
+        for spin in self.edges:spin.setValue(0)
+
+    def export_preview(self):
+        if self.last_preview is None:return
+        # Freeze the user-reviewed frame while the save dialog is open.
+        preview=self.last_preview.copy()
+        filename,_=QFileDialog.getSaveFileName(self,'진단용 하단 화면 저장',str(Path.home()/'Desktop/MapleMeterChecker-HUD.png'),'PNG 이미지 (*.png)')
+        if not filename:return
+        try:
+            preview.save(filename,format='PNG')
+            self.status.setText('선택한 하단 화면만 PNG로 저장했습니다. 자동 전송하지 않습니다.')
+        except OSError as error:self.status.setText(f'PNG 저장 실패: {error}')
 
     def failed(self,error):
         self.busy=False;self.refresh_button.setEnabled(True)
@@ -371,6 +404,14 @@ def main():
                 assert window.overlay.width()>=350
                 assert len(window.metrics)==10
                 assert window.overlay.grab().width()>0
+                from PIL import Image
+                from PIL.ImageDraw import Draw
+                sample=Image.new('RGB',(1000,158),(25,40,60));Draw(sample).text((600,100),'EXP 143,519 [25.83%]',fill='white')
+                window.receive(dict(generation=window.model.generation,at=time.monotonic(),value=(143519,25.83),
+                    lines=[],resized=False,size=(1000,748),preview=sample,factor=1.,backend='smoke-test'))
+                assert window.save_preview.isEnabled() and not window.capture_preview.pixmap().isNull()
+                window.tabs.setCurrentIndex(3);app.processEvents()
+                if os.environ.get('MMC_SMOKE_IMAGE'):window.grab().save(os.environ['MMC_SMOKE_IMAGE'])
                 print('MAC_APP_SMOKE_OK',flush=True)
                 window.close()
             except Exception:

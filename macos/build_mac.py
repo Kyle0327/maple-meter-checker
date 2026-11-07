@@ -40,9 +40,9 @@ import plistlib
 bundle=root/'dist/MapleMeterChecker.app'
 plist=bundle/'Contents/Info.plist'
 info=plistlib.loads(plist.read_bytes())
-info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22004',
+info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22005',
             LSMinimumSystemVersion='13.0',NSHighResolutionCapable=True,
-            NSScreenCaptureUsageDescription='선택한 메이플스토리 게임 창의 경험치와 메소를 읽습니다. 화면이나 오디오는 저장하거나 전송하지 않습니다.')
+            NSScreenCaptureUsageDescription='선택한 게임 창의 경험치와 메소를 이 기기에서 읽습니다. 진단 이미지는 저장 버튼을 누른 경우에만 저장하며 자동 전송하지 않습니다.')
 plist.write_bytes(plistlib.dumps(info))
 # Ad-hoc integrity signature only. This is NOT Developer ID signing/notarization.
 subprocess.run(['codesign','--force','--deep','--sign','-',str(bundle)],check=True)
