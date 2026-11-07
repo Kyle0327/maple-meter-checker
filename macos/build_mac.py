@@ -19,7 +19,7 @@ args=[sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--wi
       '--name','MapleMeterChecker','--osx-bundle-identifier','com.kyle0327.maplemeterchecker',
       '--icon',str(root/'checker.icns'),'--distpath',str(root/'dist'),'--workpath',str(root/'build'),
       '--specpath',str(root),'--hidden-import','ScreenCaptureKit','--hidden-import','Quartz',
-      '--hidden-import','Foundation','--hidden-import','AppKit','--hidden-import','objc']
+      '--hidden-import','Foundation','--hidden-import','AppKit','--hidden-import','objc','--hidden-import','Vision']
 for asset in assets:args+=['--add-data',f'{root/asset}:.']
 # Qt and PyObjC remain dynamically linked. Include upstream license notices.
 license_temp=tempfile.TemporaryDirectory(prefix='mmc-licenses-')
@@ -40,7 +40,7 @@ import plistlib
 bundle=root/'dist/MapleMeterChecker.app'
 plist=bundle/'Contents/Info.plist'
 info=plistlib.loads(plist.read_bytes())
-info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22005',
+info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22006',
             LSMinimumSystemVersion='13.0',NSHighResolutionCapable=True,
             NSScreenCaptureUsageDescription='선택한 게임 창의 경험치와 메소를 이 기기에서 읽습니다. 진단 이미지는 저장 버튼을 누른 경우에만 저장하며 자동 전송하지 않습니다.')
 plist.write_bytes(plistlib.dumps(info))

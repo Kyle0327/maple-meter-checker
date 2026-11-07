@@ -1,10 +1,12 @@
 """Read the HUD at its pixel scale, independent of macOS window decorations."""
 from reader import normalize, read_hud
+from mac_vision import VisionReader
 
 
 class MacHudReader:
-    def __init__(self):
+    def __init__(self,vision=False):
         self.factor=None;self.row=None;self.size=None;self.last_text='';self.scan_index=0;self.anchor='center'
+        self.vision=VisionReader() if vision else None;self.source='';self.note=''
 
     def sample(self,image,factor,anchor='center'):
         # Bottom anchoring keeps title bars and unrelated top padding out of
@@ -17,7 +19,7 @@ class MacHudReader:
         size=(max(1,round(strip.width/factor)),max(7,round(strip.height/factor)))
         return normalize(strip,size)
 
-    def read_image(self,image):
+    def read_bitmap(self,image):
         if self.size!=image.size:
             self.factor=self.row=None;self.scan_index=0;self.size=image.size
         if self.factor:
@@ -41,6 +43,22 @@ class MacHudReader:
                     self.factor,self.row,self.last_text=factor,result[1],result[2]
                     self.anchor=anchor
                     return result[0]
+        return None
+
+    def read_image(self,image):
+        self.source=''
+        if self.size!=image.size and self.vision:self.vision=VisionReader()
+        value=self.read_bitmap(image)
+        if value:
+            self.source='글자 패턴';self.note=''
+            if self.vision:self.vision.pending=None
+            return value
+        if self.vision:
+            try:
+                value=self.vision.read(image);self.note=self.vision.note
+                if value:self.source='Apple 문자 인식'
+                return value
+            except Exception as error:self.note=f'Apple 문자 인식: {error}'
         return None
 
 

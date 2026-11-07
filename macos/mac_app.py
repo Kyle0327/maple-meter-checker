@@ -17,7 +17,7 @@ from mac_recognition import MacHudReader, hud_preview
 from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
 
-VERSION='2.2.0-mac-preview.5'
+VERSION='2.2.0-mac-preview.6'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 
@@ -138,7 +138,7 @@ class Window(QWidget):
         super().__init__();self.smoke=smoke;self.model=Model();self.pool=ThreadPoolExecutor(max_workers=1)
         self.bus=Bus();self.bus.result.connect(self.receive);self.bus.windows.connect(self.received_windows)
         self.bus.failed.connect(self.failed);self.bus.hotkey.connect(self.action)
-        self.busy=False;self.closing=False;self.capture=None;self.reader=MacHudReader();self.pickup=PickupReader();self.reader_key=None
+        self.busy=False;self.closing=False;self.capture=None;self.reader=MacHudReader(vision=True);self.pickup=PickupReader();self.reader_key=None
         self.last_preview=None
         self.frame_size=None;self.conf={};self.hotkeys=None;self.last_undo=None
         self.data=Path(os.environ.get('MMC_TEST_DATA',str(Path.home()/'Library/Application Support/MapleMeterChecker')))
@@ -198,7 +198,7 @@ class Window(QWidget):
         helptext=QLabel('우선 여백 0%로 시도하세요. 아래 미리보기에 게임 하단 경험치 숫자가 보여야 합니다.\n검은 여백이 있을 때만 조절하세요. 변경하면 측정이 일시정지됩니다.');helptext.setWordWrap(True);form.addRow(helptext)
         clear_edges=QPushButton('여백 0%로 되돌리기');clear_edges.clicked.connect(self.clear_edges);form.addRow(clear_edges)
         self.capture_preview=QLabel('게임 창을 선택하면 실제로 읽는 하단 화면이 여기에 표시됩니다.')
-        self.capture_preview.setMinimumSize(400,110);self.capture_preview.setMaximumHeight(160)
+        self.capture_preview.setMinimumSize(400,90);self.capture_preview.setMaximumHeight(130)
         self.capture_preview.setAlignment(Qt.AlignmentFlag.AlignCenter);self.capture_preview.setWordWrap(True);form.addRow(self.capture_preview)
         self.preview_info=QLabel('미리보기는 이 기기 안에서만 표시됩니다.');self.preview_info.setWordWrap(True);form.addRow(self.preview_info)
         self.save_preview=QPushButton('진단용 하단 화면을 PNG로 저장');self.save_preview.setEnabled(False);self.save_preview.clicked.connect(self.export_preview);form.addRow(self.save_preview)
@@ -263,11 +263,12 @@ class Window(QWidget):
         try:
             image,at=self.capture.image(ident);image=crop_frame(image,edges)
             key=(ident,edges)
-            if self.reader_key!=key:self.reader=MacHudReader();self.pickup=PickupReader();self.reader_key=key
+            if self.reader_key!=key:self.reader=MacHudReader(vision=True);self.pickup=PickupReader();self.reader_key=key
             value=self.reader.read_image(image)
             lines=self.pickup.read(image,self.reader.factor)
             self.bus.result.emit(dict(generation=generation,at=at,value=value,lines=lines,resized=self.pickup.changed,
-                size=image.size,preview=hud_preview(image),factor=self.reader.factor,backend=self.capture.backend))
+                size=image.size,preview=hud_preview(image),factor=self.reader.factor,backend=self.capture.backend,
+                recognition=self.reader.source,recognition_note=self.reader.note))
         except Exception as error:self.bus.failed.emit((generation,str(error)))
 
     def receive(self,packet):
@@ -278,9 +279,9 @@ class Window(QWidget):
         if preview is not None:
             self.last_preview=preview
             qimage=QImage(preview.tobytes(),preview.width,preview.height,preview.width*3,QImage.Format.Format_RGB888).copy()
-            self.capture_preview.setPixmap(QPixmap.fromImage(qimage).scaled(650,150,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation))
+            self.capture_preview.setPixmap(QPixmap.fromImage(qimage).scaled(650,120,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation))
             factor=packet.get('factor');scale=f'{factor:.3g}배' if factor else '확인 중'
-            self.preview_info.setText(f"캡처 {self.frame_size[0]}×{self.frame_size[1]} · 글자 배율 {scale} · {packet.get('backend','')} · {VERSION}")
+            self.preview_info.setText(f"캡처 {self.frame_size[0]}×{self.frame_size[1]} · {packet.get('recognition') or '문자 탐색 중'} · 배율 {scale} · {VERSION}\n{packet.get('recognition_note','')}")
             self.save_preview.setEnabled(True)
         if packet['value']:
             n,pct=packet['value'];text=f'EXP {n:,} · {pct:.2f}% · 화면 {self.frame_size[0]}×{self.frame_size[1]}'
@@ -406,6 +407,14 @@ def main():
                 assert window.overlay.grab().width()>0
                 from PIL import Image
                 from PIL.ImageDraw import Draw
+                if sys.platform=='darwin':
+                    from PIL import ImageFont
+                    from mac_vision import recognize,text_rows,parse_exp_line
+                    ocr_sample=Image.new('RGB',(1000,300),(25,40,60))
+                    font=ImageFont.truetype(str(ASSETS/'Pretendard-Bold.otf'),24)
+                    Draw(ocr_sample).text((500,250),'EXP. 414,000 [63.18%]',font=font,fill='white')
+                    assert (414000,63.18) in [parse_exp_line(row) for row in text_rows(recognize(ocr_sample))]
+                    print('MAC_VISION_SMOKE_OK',flush=True)
                 sample=Image.new('RGB',(1000,158),(25,40,60));Draw(sample).text((600,100),'EXP 143,519 [25.83%]',fill='white')
                 window.receive(dict(generation=window.model.generation,at=time.monotonic(),value=(143519,25.83),
                     lines=[],resized=False,size=(1000,748),preview=sample,factor=1.,backend='smoke-test'))

@@ -32,7 +32,8 @@ jobs:
       - name: Check native capture APIs
         run: |
           python - <<'PY'
-          import ScreenCaptureKit as SC, Quartz
+          import ScreenCaptureKit as SC, Quartz, Vision
+          assert hasattr(Vision.VNRecognizeTextRequest, 'setRecognitionLevel_')
           assert hasattr(SC.SCScreenshotManager, 'captureImageWithFilter_configuration_completionHandler_')
           assert hasattr(SC.SCContentFilter, 'contentRect')
           assert hasattr(SC.SCContentFilter, 'pointPixelScale')
@@ -56,6 +57,7 @@ jobs:
           print(result.stderr)
           assert result.returncode == 0, result.returncode
           assert 'MAC_APP_SMOKE_OK' in result.stdout
+          assert 'MAC_VISION_SMOKE_OK' in result.stdout
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -83,9 +85,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=mac-v2.2.0-preview.5
+          tag=mac-v2.2.0-preview.6
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release-files/* macos/README-mac.txt --clobber
           else
-            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.5" --notes-file macos/RELEASE-NOTES.txt
+            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.6" --notes-file macos/RELEASE-NOTES.txt
           fi
