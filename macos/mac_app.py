@@ -16,7 +16,7 @@ from reader import Reader, PickupReader
 from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
 
-VERSION='2.2.0-mac-preview.3'
+VERSION='2.2.0-mac-preview.4'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 

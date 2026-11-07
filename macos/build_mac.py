@@ -7,7 +7,9 @@ import platform
 import shutil
 import subprocess
 import sys
+import tempfile
 from PIL import Image
+from license_notices import is_notice, notice_candidate
 
 if sys.platform!='darwin':raise SystemExit('Build this app on macOS.')
 root=Path(__file__).resolve().parent
@@ -20,16 +22,17 @@ args=[sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--wi
       '--hidden-import','Foundation','--hidden-import','AppKit','--hidden-import','objc']
 for asset in assets:args+=['--add-data',f'{root/asset}:.']
 # Qt and PyObjC remain dynamically linked. Include upstream license notices.
-licenses=root/'third-party-licenses';licenses.mkdir(exist_ok=True)
+license_temp=tempfile.TemporaryDirectory(prefix='mmc-licenses-')
+licenses=Path(license_temp.name)
 inventory=[]
 for dist in metadata.distributions():
     name=dist.metadata['Name'];inventory.append({'name':name,'version':dist.version})
     for file in dist.files or []:
-        if any(part.lower().startswith(('license','copying','notice')) for part in file.parts):
-            source=Path(dist.locate_file(file))
-            if source.is_file():
-                destination=licenses/name/str(file)
-                destination.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,destination)
+        if not notice_candidate(file):continue
+        source=Path(dist.locate_file(file))
+        if source.is_file() and is_notice(file,source.read_bytes()):
+            destination=licenses/name/str(file)
+            destination.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,destination)
 (licenses/'dependencies.json').write_text(json.dumps(inventory,indent=2))
 args+=['--add-data',f'{licenses}:licenses',str(root/'mac_app.py')]
 subprocess.run(args,check=True)
@@ -37,7 +40,7 @@ import plistlib
 bundle=root/'dist/MapleMeterChecker.app'
 plist=bundle/'Contents/Info.plist'
 info=plistlib.loads(plist.read_bytes())
-info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22003',
+info.update(CFBundleShortVersionString='2.2.0',CFBundleVersion='22004',
             LSMinimumSystemVersion='13.0',NSHighResolutionCapable=True,
             NSScreenCaptureUsageDescription='선택한 메이플스토리 게임 창의 경험치와 메소를 읽습니다. 화면이나 오디오는 저장하거나 전송하지 않습니다.')
 plist.write_bytes(plistlib.dumps(info))

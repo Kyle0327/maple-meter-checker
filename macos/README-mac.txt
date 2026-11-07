@@ -1,5 +1,5 @@
 Maple meter checker — macOS 테스트 버전
-버전: 2.2.0-mac-preview.3
+버전: 2.2.0-mac-preview.4
 
 지원 대상
 - macOS 13 이상, Apple Silicon 또는 Intel Mac (해당 CPU용 ZIP 선택)
