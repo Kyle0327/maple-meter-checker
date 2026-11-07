@@ -12,11 +12,13 @@
 
 **macOS 13 Ventura 이상 대상 호환 수정판** · CrossOver에서 게임이 정상 실행되는 환경을 대상으로 합니다.
 
-- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.4/MapleMeterChecker-macOS-arm64-preview.zip)
-- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.4/MapleMeterChecker-macOS-x86_64-preview.zip)
-- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.4)
+- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.5/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.5/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.5)
 
 앱을 응용 프로그램 폴더로 옮긴 뒤 화면 기록 권한을 허용하고, 창 목록에서 게임 창을 선택하세요. Mac 기본 시작/일시정지 단축키는 **Control + Option + S**입니다.
+
+화면 인식 보정판 **preview.5**에서는 창 제목 표시줄·Retina 확대와 별도로 글자 배율을 찾습니다. 인식이 안 되면 **인식 영역 → 여백 0%로 되돌리기**를 누르고 하단 미리보기를 확인하세요. 숫자가 보이는데도 실패하면 그 탭의 **진단용 하단 화면을 PNG로 저장** 버튼으로 원본을 저장할 수 있습니다. 진단 이미지는 버튼을 눌렀을 때만 저장하며 자동 전송하지 않습니다. 제보한 Mac에서 인식 문제가 해결됐는지는 사용자 확인 전입니다.
 
 **Ventura 실기기 실행 및 실제 CrossOver 게임 인식은 사용자 확인 전입니다.** 최소 OS 버전과 내부 라이브러리 검사를 추가했으며, 자동 실행 테스트는 macOS 15에서 진행했습니다. Apple Silicon·Intel에서 빌드 및 앱 시작 테스트를 거칩니다. Apple Developer ID 서명·공증은 아직 없어 Gatekeeper가 차단할 수 있는 테스트 빌드입니다. 일반 사용자용 서명·공증과 실기기 검증은 남아 있습니다.
 
