@@ -16,7 +16,7 @@ from reader import Reader, PickupReader
 from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
 
-VERSION='2.2.0-mac-preview.2'
+VERSION='2.2.0-mac-preview.3'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 
@@ -355,7 +355,7 @@ class Window(QWidget):
 
 def main():
     smoke='--smoke-test' in sys.argv
-    if not smoke and sys.platform!='darwin':raise SystemExit('This application is for macOS 14 or later.')
+    if not smoke and sys.platform!='darwin':raise SystemExit('This application is for macOS 13 or later.')
     app=QApplication(sys.argv);app.setApplicationName('Maple meter checker');app.setQuitOnLastWindowClosed(False)
     directory=Path(os.environ.get('MMC_TEST_DATA',str(Path.home()/'Library/Application Support/MapleMeterChecker')))
     directory.mkdir(parents=True,exist_ok=True)

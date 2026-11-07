@@ -1,8 +1,8 @@
 Maple meter checker — macOS 테스트 버전
-버전: 2.2.0-mac-preview.2
+버전: 2.2.0-mac-preview.3
 
 지원 대상
-- macOS 14 이상, Apple Silicon 또는 Intel Mac (해당 CPU용 ZIP 선택)
+- macOS 13 이상, Apple Silicon 또는 Intel Mac (해당 CPU용 ZIP 선택)
 - CrossOver 등에서 실행한 메이플스토리 클래식 월드 게임 창
 - 게임 설치나 실행 환경을 제공하는 프로그램은 아닙니다.
 - 실제 CrossOver 게임 화면 인식·전체 화면·단축키는 맥 사용자 테스트가 필요합니다.

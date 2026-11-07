@@ -1,10 +1,17 @@
+## Ventura 호환 수정
+기존 맥판은 macOS 14 이상용이어서 Ventura에서 실행할 수 없었습니다.
+이번 빌드는 macOS 13부터 로드할 수 있는 Qt 6.8.3과 라이브러리를 사용합니다.
+Ventura는 선택한 게임 창을 CoreGraphics로, macOS 14 이상은 ScreenCaptureKit으로 캡처합니다.
+앱과 포함된 Mach-O 라이브러리의 최소 macOS 버전도 검사합니다.
+Ventura 실기기에서의 실행·게임 인식 검증은 사용자 확인 전이며, 자동 실행 테스트 환경은 macOS 15입니다.
+
 메소 +α 표시와 레벨업 예상 시간이 추가되었습니다.
 
-macOS 14 이상용 테스트 버전입니다. Windows 정식 배포와 별도입니다.
+macOS 13 이상용 테스트 버전입니다. Windows 정식 배포와 별도입니다.
 
 ## 다운로드
-- [Apple Silicon (M 시리즈)](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.2/MapleMeterChecker-macOS-arm64-preview.zip)
-- [Intel Mac](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.2/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Apple Silicon (M 시리즈)](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.3/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.3/MapleMeterChecker-macOS-x86_64-preview.zip)
 
 ZIP을 풀고 MapleMeterChecker.app을 응용 프로그램 폴더로 옮겨 실행합니다.
 화면 기록 권한을 허용하고 앱을 다시 연 뒤, CrossOver 게임 창을 선택하세요.

@@ -23,7 +23,10 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install pinned dependencies
-        run: python -m pip install -r macos/requirements-mac.txt
+        run: |
+          arch=$(python -c 'import platform; print(platform.machine())')
+          python -m pip download --only-binary=:all: --platform "macosx_13_0_${arch}" --dest ventura-wheels -r macos/requirements-mac.txt
+          python -m pip install --no-index --find-links ventura-wheels -r macos/requirements-mac.txt
       - name: Test counters and capture boundaries
         run: python -m unittest discover -s macos -p "test_*.py" -v
       - name: Check native capture APIs
@@ -39,7 +42,7 @@ jobs:
           PY
       - name: Build app and verify ad-hoc signature
         env:
-          MACOSX_DEPLOYMENT_TARGET: '14.0'
+          MACOSX_DEPLOYMENT_TARGET: '13.0'
         run: python macos/build_mac.py
       - name: Launch packaged app smoke test
         env:
@@ -73,9 +76,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=mac-v2.2.0-preview.2
+          tag=mac-v2.2.0-preview.3
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release-files/* macos/README-mac.txt --clobber
           else
-            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.2" --notes-file macos/RELEASE-NOTES.txt
+            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.3" --notes-file macos/RELEASE-NOTES.txt
           fi
