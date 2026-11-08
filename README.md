@@ -12,15 +12,17 @@
 
 **macOS 13 Ventura 이상 대상 호환 수정판** · CrossOver에서 게임이 정상 실행되는 환경을 대상으로 합니다.
 
-- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.7/MapleMeterChecker-macOS-arm64-preview.zip)
-- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.7/MapleMeterChecker-macOS-x86_64-preview.zip)
-- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.7)
+- [Apple Silicon (M 시리즈) 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.8/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac 다운로드](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.8/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Mac 사용 안내](macos/README-mac.txt) · [테스트 버전 변경 사항](https://github.com/Kyle0327/maple-meter-checker/releases/tag/mac-v2.2.0-preview.8)
 
 앱을 응용 프로그램 폴더로 옮긴 뒤 화면 기록 권한을 허용하고, 창 목록에서 게임 창을 선택하세요. Mac 기본 시작/일시정지 단축키는 **Control + Option + S**입니다.
 
+**경험치가 보이는데 측정 시작이 잠기던 문제를 preview.8에서 수정했습니다.** 게임 창과 표시 항목을 선택하고 시작을 누르면, 클릭 이후 새로 캡처한 경험치를 기준으로 측정을 시작합니다. 준비 중에는 **시작 취소**로 취소할 수 있습니다. 인식이 늦게 끝나도 이전 화면을 시작점으로 사용하지 않습니다.
+
 **게임 창 목록이 비어 있고 권한 안내만 나오는 경우:** Ventura의 **시스템 설정 → 개인정보 보호 및 보안 → 화면 기록**에서 허용하세요. 이미 켰는데도 안 되면 앱의 **허용했는데 안 될 때**를 눌러 이 앱의 화면 기록 권한만 다시 요청할 수 있습니다. 허용 후 **앱 완전히 종료**를 누르고 응용 프로그램 폴더의 같은 앱을 다시 여세요. 권한 복구는 사용자 확인 후에만 실행되며 다른 앱의 권한은 바꾸지 않습니다.
 
-화면 인식 보정판 **preview.7**에서는 기존 글자 패턴 인식이 실패하면 **macOS 문자 인식으로 현재 화면의 EXP 숫자와 %를 읽습니다.** 숫자는 매번 새 캡처에서 읽으며, 특정 값을 등록하거나 고정하지 않습니다. 인식이 안 되면 **인식 영역 → 여백 0%로 되돌리기**를 누르고 하단 미리보기를 확인하세요. 숫자가 보이는데도 실패하면 그 탭의 **진단용 하단 화면을 PNG로 저장** 버튼으로 원본을 저장할 수 있습니다. 문자 인식은 기기 안에서 실행되며 진단 이미지는 버튼을 눌렀을 때만 저장하고 자동 전송하지 않습니다. 제보한 Mac에서 인식 문제가 해결됐는지는 사용자 확인 전입니다.
+화면 인식 보정판 **preview.8**에서는 기존 글자 패턴 인식이 실패하면 **macOS 문자 인식으로 현재 화면의 EXP 숫자와 %를 읽습니다.** 숫자는 매번 새 캡처에서 읽으며, 특정 값을 등록하거나 고정하지 않습니다. 인식이 안 되면 **인식 영역 → 여백 0%로 되돌리기**를 누르고 하단 미리보기를 확인하세요. 숫자가 보이는데도 실패하면 그 탭의 **진단용 하단 화면을 PNG로 저장** 버튼으로 원본을 저장할 수 있습니다. 문자 인식은 기기 안에서 실행되며 진단 이미지는 버튼을 눌렀을 때만 저장하고 자동 전송하지 않습니다. 제보한 Mac에서 인식 문제가 해결됐는지는 사용자 확인 전입니다.
 
 **Ventura 실기기 실행 및 실제 CrossOver 게임 인식은 사용자 확인 전입니다.** 최소 OS 버전과 내부 라이브러리 검사를 추가했으며, 자동 실행 테스트는 macOS 15에서 진행했습니다. Apple Silicon·Intel에서 빌드 및 앱 시작 테스트를 거칩니다. Apple Developer ID 서명·공증은 아직 없어 Gatekeeper가 차단할 수 있는 테스트 빌드입니다. 일반 사용자용 서명·공증과 실기기 검증은 남아 있습니다.
 
