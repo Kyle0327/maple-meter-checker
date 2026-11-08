@@ -1,3 +1,11 @@
+## 화면 기록 권한 복구 안내
+Ventura에서는 정확한 메뉴 이름인 '화면 기록'을 안내하며 설정을 직접 열 수 있습니다.
+'허용했는데 안 될 때' 버튼은 사용자가 확인한 경우에만 이 앱의 화면 기록 권한 기록을 초기화하고 다시 요청합니다.
+다른 앱의 권한을 초기화하거나 권한을 자동으로 허용하지 않습니다.
+설정에서 허용한 뒤 '앱 완전히 종료'를 누르고 응용 프로그램 폴더의 같은 앱을 다시 여세요.
+실행 중인 버전은 창 제목에 표시되며, 권한 복구 대화상자의 세부 정보에는 실제 실행 위치가 표시됩니다.
+이 수정은 권한 복구 절차를 제공하며, 제보한 Mac에서 권한 복구와 게임 인식이 성공했는지는 확인 전입니다.
+
 ## 실시간 경험치 문자 인식 보강
 기존 글자 패턴 인식이 실패하면 macOS의 Apple Vision으로 현재 화면의 EXP 숫자와 %를 읽습니다.
 사진 속 특정 숫자를 등록하는 방식이 아니며, 매번 새로 캡처한 화면에서 값을 읽고 경험치 변화를 계산합니다.
@@ -27,8 +35,8 @@ Ventura 실기기에서의 실행·게임 인식 검증은 사용자 확인 전�
 macOS 13 이상용 테스트 버전입니다. Windows 정식 배포와 별도입니다.
 
 ## 다운로드
-- [Apple Silicon (M 시리즈)](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.6/MapleMeterChecker-macOS-arm64-preview.zip)
-- [Intel Mac](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.6/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Apple Silicon (M 시리즈)](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.7/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.7/MapleMeterChecker-macOS-x86_64-preview.zip)
 
 ZIP을 풀고 MapleMeterChecker.app을 응용 프로그램 폴더로 옮겨 실행합니다.
 화면 기록 권한을 허용하고 앱을 다시 연 뒤, CrossOver 게임 창을 선택하세요.

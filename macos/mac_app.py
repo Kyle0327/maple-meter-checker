@@ -6,8 +6,8 @@ from pathlib import Path
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from PySide6.QtCore import Qt, QTimer, Signal, QObject, QRectF, QLockFile
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QPainter, QPainterPath, QPen, QIcon, QImage, QPixmap
+from PySide6.QtCore import Qt, QTimer, Signal, QObject, QRectF, QLockFile, QUrl
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QPainter, QPainterPath, QPen, QIcon, QImage, QPixmap, QDesktopServices
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QComboBox, QCheckBox, QSlider, QSpinBox, QDoubleSpinBox, QTabWidget, QFormLayout,
     QLineEdit, QMessageBox, QScrollArea, QFileDialog)
@@ -16,8 +16,9 @@ from reader import PickupReader
 from mac_recognition import MacHudReader, hud_preview
 from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
+from mac_permissions import settings_label,SETTINGS_URL,bundle_path,reset_screen_permission
 
-VERSION='2.2.0-mac-preview.6'
+VERSION='2.2.0-mac-preview.7'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 
@@ -150,7 +151,7 @@ class Window(QWidget):
         for name in ('Pretendard-Bold.otf','Pretendard-ExtraBold.otf'):
             ident=QFontDatabase.addApplicationFont(str(ASSETS/name))
             if ident>=0:self.font_family=QFontDatabase.applicationFontFamilies(ident)[0]
-        self.setWindowTitle('Maple meter checker · Mac 테스트 버전')
+        self.setWindowTitle(f'Maple meter checker · {VERSION}')
         self.setWindowIcon(QIcon(str(ASSETS/'checker.png')));self.resize(760,760)
         self.setStyleSheet('QWidget {background:#10171C;color:#F6F6F3;font-size:13px;} '
             'QPushButton,QComboBox,QLineEdit,QSpinBox {background:#25323C;border:1px solid #43545F;border-radius:5px;padding:7px;} '
@@ -158,12 +159,16 @@ class Window(QWidget):
             'QTabBar::tab {padding:10px 18px;} QTabBar::tab:selected {background:#25323C;} '
             'QCheckBox {padding:5px;} QSlider::groove:horizontal {background:#43545F;height:5px;} '
             'QSlider::handle:horizontal {background:#EAB38B;width:16px;margin:-5px 0;border-radius:5px;}')
-        outer=QVBoxLayout(self);outer.setContentsMargins(24,20,24,20);outer.setSpacing(14)
+        outer=QVBoxLayout(self);outer.setContentsMargins(24,20,24,20);outer.setSpacing(10)
         title=QLabel('Maple meter checker  /  Mac');title.setStyleSheet('font-size:26px;font-weight:bold;color:#EAB38B;');outer.addWidget(title)
         outer.addWidget(QLabel('CrossOver 게임 창을 선택해 경험치와 메소를 확인하세요.  ·  테스트 버전'))
         row=QHBoxLayout();self.permission_button=QPushButton('1. 화면 기록 권한');self.permission_button.clicked.connect(self.permission)
         self.refresh_button=QPushButton('2. 창 목록 새로고침');self.refresh_button.clicked.connect(self.refresh_windows)
         row.addWidget(self.permission_button);row.addWidget(self.refresh_button);outer.addLayout(row)
+        row=QHBoxLayout()
+        for title,callback in (('권한 설정 열기',self.open_permission_settings),('허용했는데 안 될 때',self.repair_permission),('앱 완전히 종료',self.close)):
+            button=QPushButton(title);button.clicked.connect(callback);row.addWidget(button)
+        outer.addLayout(row)
         self.windows=QComboBox();self.windows.addItem('게임 창을 선택하세요',None);self.windows.currentIndexChanged.connect(self.target_changed);outer.addWidget(self.windows)
         self.status=QLabel('화면 기록 권한을 허용하고 게임 창을 선택하세요.');self.status.setWordWrap(True);outer.addWidget(self.status)
         tabs=QTabWidget();self.tabs=tabs;outer.addWidget(tabs)
@@ -172,7 +177,8 @@ class Window(QWidget):
         for key,label in METRICS.items():
             cb=QCheckBox(label);cb.setChecked(key in selected);cb.toggled.connect(self.changed);self.metrics[key]=cb;layout.addWidget(cb)
         self.percent=QCheckBox('경험치를 %로 표시');self.percent.setChecked(bool(self.conf.get('percent',False)));self.percent.toggled.connect(self.changed);layout.addWidget(self.percent)
-        layout.addWidget(QLabel('분당·30분·1시간과 레벨업 시간은 평균 속도 기준 예상치입니다.\n메소 +α는 누락 가능성을 뜻하며 누락량을 임의로 더하지 않습니다.'));layout.addStretch();tabs.addTab(page,'표시 항목')
+        layout.addWidget(QLabel('분당·30분·1시간과 레벨업 시간은 평균 속도 기준 예상치입니다.\n메소 +α는 누락 가능성을 뜻하며 누락량을 임의로 더하지 않습니다.'));layout.addStretch()
+        metrics_scroll=QScrollArea();metrics_scroll.setWidgetResizable(True);metrics_scroll.setWidget(page);tabs.addTab(metrics_scroll,'표시 항목')
         page=QWidget();form=QFormLayout(page)
         self.font_size=QSpinBox();self.font_size.setRange(8,26);self.font_size.setValue(self.number('font_size',16,8,26));self.font_size.valueChanged.connect(self.changed);form.addRow('글자 크기',self.font_size)
         self.bg_alpha=self.slider(self.number('background_opacity',80,0,100),0);form.addRow('배경 불투명도',self.bg_alpha)
@@ -228,12 +234,49 @@ class Window(QWidget):
         slider=QSlider(Qt.Orientation.Horizontal);slider.setRange(minimum,100);slider.setValue(value);slider.valueChanged.connect(self.changed);return slider
 
     def permission(self):
-        from mac_capture import request_permission
-        allowed=request_permission()
-        self.status.setText('권한이 허용됐습니다. 창 목록을 새로고침하세요.' if allowed else '시스템 설정 → 개인정보 보호 및 보안 → 화면 및 시스템 오디오 기록에서 이 앱을 허용하고 다시 실행하세요.')
+        if self.smoke:return
+        from mac_capture import request_permission,has_permission
+        try:
+            allowed=has_permission() or request_permission()
+            if allowed:
+                self.status.setText('현재 앱의 화면 기록 권한이 확인됐습니다. 창 목록을 가져옵니다.');self.refresh_windows()
+            else:self.open_permission_settings()
+        except Exception as error:self.status.setText(f'권한 확인 실패: {error}')
+
+    def open_permission_settings(self):
+        if self.smoke:return
+        opened=QDesktopServices.openUrl(QUrl(SETTINGS_URL))
+        text=f'시스템 설정 → 개인정보 보호 및 보안 → {settings_label()}에서 MapleMeterChecker를 켜세요. '
+        text+='그다음 앱을 완전히 종료하고 응용 프로그램 폴더의 앱을 다시 여세요.'
+        if not opened:text='설정 자동 열기에 실패했습니다. '+text
+        self.status.setText(text)
+
+    def repair_permission(self):
+        if self.smoke:return
+        try:path=bundle_path()
+        except Exception as error:self.status.setText(str(error));return
+        box=QMessageBox(self);box.setWindowTitle('화면 기록 권한 다시 설정')
+        box.setText('업데이트 후 권한이 켜져 있는데도 안 될 때 사용하세요.\n이 앱의 화면 기록 허용 기록만 지우고 macOS에 다시 요청합니다. 허용 여부는 직접 선택해야 합니다.')
+        box.setInformativeText('먼저 이 앱을 응용 프로그램 폴더에 두고 실행해 주세요.\n허용 후에는 앱을 완전히 종료하고 같은 위치에서 다시 열어야 합니다.')
+        box.setDetailedText(f'현재 실행 중인 앱: {path}\n버전: {VERSION}')
+        box.setStandardButtons(QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.Cancel)
+        box.button(QMessageBox.StandardButton.Yes).setText('이 앱 권한만 다시 요청')
+        box.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        if box.exec()!=QMessageBox.StandardButton.Yes:return
+        self.windows.setCurrentIndex(0);self.target_changed()
+        try:
+            reset_screen_permission(path)
+            self.permission()
+        except Exception as error:self.status.setText(str(error))
 
     def refresh_windows(self):
         if self.busy or self.capture is None:return
+        from mac_capture import has_permission
+        try:allowed=has_permission()
+        except Exception as error:self.status.setText(f'권한 확인 실패: {error}');return
+        if not allowed:
+            self.status.setText(f'현재 앱의 화면 기록 권한이 확인되지 않습니다. {settings_label()}에서 허용 후 완전히 종료·재실행하세요. 이미 켰다면 「허용했는데 안 될 때」를 누르세요.')
+            return
         self.busy=True;self.refresh_button.setEnabled(False);self.status.setText('선택 가능한 창을 확인하는 중…')
         self.pool.submit(self.list_job)
 
