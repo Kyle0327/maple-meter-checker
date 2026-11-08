@@ -1,3 +1,12 @@
+## 경험치가 보여도 측정 시작이 잠기던 문제 수정
+맥에서 인식 처리가 늦으면 기존의 캡처 후 3초 제한 때문에 시작 버튼이 잠길 수 있었습니다.
+이제 게임 창과 표시 항목을 선택하면 측정 시작을 누를 수 있습니다.
+클릭 이후 새로 캡처한 화면의 유효한 경험치를 시작 기준으로 사용하므로 오래된 표시 값을 시작점으로 사용하지 않습니다.
+시작 준비 중에는 진행 안내와 '시작 취소' 버튼이 표시됩니다. 화면 인식에 실패하면 측정을 시작하지 않습니다.
+Apple 문자 인식이 성공한 뒤에는 느린 글자 패턴 전체 검색을 매번 반복하지 않습니다.
+지연된 인식·시작 취소·창 변경·초기화·메소 시작 기준을 테스트하고, 완성된 앱에서 시작 버튼 클릭 → 새 경험치 수신 → 획득량 계산 → 일시정지 과정을 검사합니다.
+제보한 Mac의 실기기에서 해결됐는지는 사용자 확인 전입니다.
+
 ## 화면 기록 권한 복구 안내
 Ventura에서는 정확한 메뉴 이름인 '화면 기록'을 안내하며 설정을 직접 열 수 있습니다.
 '허용했는데 안 될 때' 버튼은 사용자가 확인한 경우에만 이 앱의 화면 기록 권한 기록을 초기화하고 다시 요청합니다.
@@ -35,8 +44,8 @@ Ventura 실기기에서의 실행·게임 인식 검증은 사용자 확인 전�
 macOS 13 이상용 테스트 버전입니다. Windows 정식 배포와 별도입니다.
 
 ## 다운로드
-- [Apple Silicon (M 시리즈)](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.7/MapleMeterChecker-macOS-arm64-preview.zip)
-- [Intel Mac](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.7/MapleMeterChecker-macOS-x86_64-preview.zip)
+- [Apple Silicon (M 시리즈)](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.8/MapleMeterChecker-macOS-arm64-preview.zip)
+- [Intel Mac](https://github.com/Kyle0327/maple-meter-checker/releases/download/mac-v2.2.0-preview.8/MapleMeterChecker-macOS-x86_64-preview.zip)
 
 ZIP을 풀고 MapleMeterChecker.app을 응용 프로그램 폴더로 옮겨 실행합니다.
 화면 기록 권한을 허용하고 앱을 다시 연 뒤, CrossOver 게임 창을 선택하세요.

@@ -7,6 +7,7 @@ class MacHudReader:
     def __init__(self,vision=False):
         self.factor=None;self.row=None;self.size=None;self.last_text='';self.scan_index=0;self.anchor='center'
         self.vision=VisionReader() if vision else None;self.source='';self.note=''
+        self.prefer_vision=False
 
     def sample(self,image,factor,anchor='center'):
         # Bottom anchoring keeps title bars and unrelated top padding out of
@@ -34,8 +35,9 @@ class MacHudReader:
                 factor=(image.height-title)/native
                 if .7<=factor<=4 and all(abs(factor-x)>.003 for x in bank):bank.append(factor)
         # Bound work per frame when the game is blank or the HUD is hidden.
-        candidates=[bank[(self.scan_index+i)%len(bank)] for i in range(min(4,len(bank)))]
-        self.scan_index=(self.scan_index+4)%len(bank)
+        budget=1 if self.vision else 4
+        candidates=[bank[(self.scan_index+i)%len(bank)] for i in range(min(budget,len(bank)))]
+        self.scan_index=(self.scan_index+budget)%len(bank)
         for factor in candidates:
             for anchor in ('center','right') if image.width>round(800*factor) else ('center',):
                 result=read_hud(self.sample(image,factor,anchor))
@@ -47,16 +49,22 @@ class MacHudReader:
 
     def read_image(self,image):
         self.source=''
-        if self.size!=image.size and self.vision:self.vision=VisionReader()
+        if self.size!=image.size and self.vision:
+            self.vision=VisionReader();self.prefer_vision=False
+        if self.prefer_vision:return self.read_vision(image)
         value=self.read_bitmap(image)
         if value:
             self.source='글자 패턴';self.note=''
             if self.vision:self.vision.pending=None
             return value
+        if self.vision:return self.read_vision(image)
+        return None
+
+    def read_vision(self,image):
         if self.vision:
             try:
                 value=self.vision.read(image);self.note=self.vision.note
-                if value:self.source='Apple 문자 인식'
+                if value:self.source='Apple 문자 인식';self.prefer_vision=True
                 return value
             except Exception as error:self.note=f'Apple 문자 인식: {error}'
         return None

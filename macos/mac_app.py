@@ -18,7 +18,7 @@ from mac_model import Model, crop_frame
 from mac_hotkeys import DEFAULT_KEYS, Hotkeys
 from mac_permissions import settings_label,SETTINGS_URL,bundle_path,reset_screen_permission
 
-VERSION='2.2.0-mac-preview.7'
+VERSION='2.2.0-mac-preview.8'
 ASSETS=Path(__file__).parent
 BG='#10171C';PANEL='#1D272E';TEXT='#F6F6F3';ORANGE='#EAB38B'
 
@@ -212,6 +212,7 @@ class Window(QWidget):
         row=QHBoxLayout();self.start=QPushButton('측정 시작');self.start.clicked.connect(lambda:self.action('toggle'))
         reset=QPushButton('초기화');reset.clicked.connect(lambda:self.action('reset'));self.undo=QPushButton('초기화 취소');self.undo.clicked.connect(self.undo_reset);self.undo.setEnabled(False)
         row.addWidget(reset);row.addWidget(self.undo);row.addStretch();row.addWidget(self.start);outer.addLayout(row)
+        self.start_hint=QLabel('게임 창을 선택하고 측정 시작을 누르세요.');self.start_hint.setWordWrap(True);outer.addWidget(self.start_hint)
         note=QLabel('화면은 이 기기 안에서만 처리합니다. 진단 PNG는 저장 버튼을 누른 경우에만 저장하며 자동 전송하지 않습니다.');note.setWordWrap(True);outer.addWidget(note)
         self.overlay=Overlay(self)
         pos=self.conf.get('position')
@@ -357,8 +358,18 @@ class Window(QWidget):
         now=time.monotonic()
         if self.last_undo and now-self.last_undo[0]>=8:self.last_undo=None
         self.undo.setEnabled(self.last_undo is not None)
-        self.start.setText('일시정지' if self.model.session.running else ('계속 측정' if self.model.session.started else '측정 시작'))
-        self.start.setEnabled(self.model.session.running or (any(cb.isChecked() for cb in self.metrics.values()) and self.model.reading is not None and self.model.reading.level is not None and now-self.model.last_good<3))
+        self.start.setText('일시정지' if self.model.session.running else ('시작 취소' if self.model.start_pending else ('계속 측정' if self.model.session.started else '측정 시작')))
+        selected=any(cb.isChecked() for cb in self.metrics.values())
+        target=self.windows.currentData() is not None
+        self.start.setEnabled(self.model.session.running or self.model.start_pending or (selected and target))
+        if self.model.session.running:hint='측정 중입니다.'
+        elif self.model.start_pending:
+            hint='시작 준비 중 · 클릭 이후 새 화면을 인식하면 자동으로 측정을 시작합니다.'
+            if self.model.reading is not None and self.model.reading.level is None:hint+=' 경험치와 %로 레벨을 확인하고 있습니다.'
+        elif not target:hint='게임 창을 먼저 선택하세요.'
+        elif not selected:hint='표시 항목을 하나 이상 선택하세요.'
+        else:hint='측정 시작을 누르면 새 화면의 경험치를 시작점으로 사용합니다.'
+        self.start_hint.setText(hint)
         visible=self.show_panel.isChecked() and (self.model.session.started or self.preview.isChecked())
         if visible and not self.overlay.isVisible():self.overlay.show();self.overlay.apply_native_flags()
         elif not visible:self.overlay.hide()
@@ -376,7 +387,10 @@ class Window(QWidget):
             import copy
             self.last_undo=(now,copy.deepcopy(self.model.session))
             self.model.reset(now);self.status.setText('초기화했습니다. 8초 동안 취소할 수 있습니다.');return
-        try:self.model.toggle(now)
+        if not self.model.session.running and not self.model.start_pending:
+            if self.windows.currentData() is None:self.status.setText('게임 창을 먼저 선택하세요.');return
+            if not any(cb.isChecked() for cb in self.metrics.values()):self.status.setText('표시 항목을 하나 이상 선택하세요.');return
+        try:self.model.request_toggle(now)
         except ValueError as error:self.status.setText(str(error))
 
     def undo_reset(self):
@@ -459,9 +473,19 @@ def main():
                     assert (414000,63.18) in [parse_exp_line(row) for row in text_rows(recognize(ocr_sample))]
                     print('MAC_VISION_SMOKE_OK',flush=True)
                 sample=Image.new('RGB',(1000,158),(25,40,60));Draw(sample).text((600,100),'EXP 143,519 [25.83%]',fill='white')
+                window.windows.addItem('Smoke game',42);window.windows.setCurrentIndex(1)
                 window.receive(dict(generation=window.model.generation,at=time.monotonic(),value=(143519,25.83),
                     lines=[],resized=False,size=(1000,748),preview=sample,factor=1.,backend='smoke-test'))
                 assert window.save_preview.isEnabled() and not window.capture_preview.pixmap().isNull()
+                window.tick();assert window.start.isEnabled()
+                window.start.click();assert window.model.start_pending
+                from reader import exp_for_level
+                for amount in (143619,143719):
+                    percentage=int(amount*10000/exp_for_level(47))/100
+                    window.receive(dict(generation=window.model.generation,at=time.monotonic(),value=(amount,percentage),lines=[],resized=False,size=(1000,748)))
+                assert window.model.session.running and window.model.session.gained==100
+                window.start.click();assert not window.model.session.running
+                print('MAC_START_BUTTON_SMOKE_OK',flush=True)
                 window.tabs.setCurrentIndex(3);app.processEvents()
                 if os.environ.get('MMC_SMOKE_IMAGE'):window.grab().save(os.environ['MMC_SMOKE_IMAGE'])
                 print('MAC_APP_SMOKE_OK',flush=True)

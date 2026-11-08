@@ -1,5 +1,5 @@
 Maple meter checker — macOS 테스트 버전
-버전: 2.2.0-mac-preview.7
+버전: 2.2.0-mac-preview.8
 
 지원 대상
 - macOS 13 이상, Apple Silicon 또는 Intel Mac (해당 CPU용 ZIP 선택)
@@ -15,6 +15,7 @@ Maple meter checker — macOS 테스트 버전
 5. CrossOver에서 게임을 창 모드로 실행합니다.
 6. '창 목록 새로고침'을 누르고 게임 창을 선택합니다.
 7. 경험치 인식이 확인되면 '측정 시작'을 누릅니다.
+   클릭 이후 새로 캡처한 경험치를 확인하면 자동으로 시작합니다. 준비 중에는 '시작 취소'로 취소할 수 있습니다.
 
 보안 서명
 이 테스트 빌드는 Apple Developer ID 서명 및 공증을 받지 않았습니다.

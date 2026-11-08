@@ -58,6 +58,7 @@ jobs:
           assert result.returncode == 0, result.returncode
           assert 'MAC_APP_SMOKE_OK' in result.stdout
           assert 'MAC_VISION_SMOKE_OK' in result.stdout
+          assert 'MAC_START_BUTTON_SMOKE_OK' in result.stdout
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -85,9 +86,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=mac-v2.2.0-preview.7
+          tag=mac-v2.2.0-preview.8
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" release-files/* macos/README-mac.txt --clobber
           else
-            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.7" --notes-file macos/RELEASE-NOTES.txt
+            gh release create "$tag" release-files/* macos/README-mac.txt --target "$GITHUB_SHA" --prerelease --latest=false --title "Mac 테스트 버전 2.2.0-preview.8" --notes-file macos/RELEASE-NOTES.txt
           fi
